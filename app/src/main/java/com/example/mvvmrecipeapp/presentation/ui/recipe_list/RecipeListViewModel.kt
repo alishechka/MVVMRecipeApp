@@ -19,27 +19,34 @@ constructor(
     @Named("auth_token") private val token: String
 ) : ViewModel() {
 
-    val recipes: MutableState<List<Recipe>> = mutableStateOf(listOf())
-    val query = mutableStateOf("carrot")
+    val recipes: MutableState<List<Recipe>> = mutableStateOf(ArrayList())
+
+    val query = mutableStateOf("")
+
+    val selectedCategory: MutableState<FoodCategory?> = mutableStateOf(null)
 
     init {
-        newSearch(query.value)
+        newSearch()
     }
 
-    fun newSearch(query: String) {
+    fun newSearch(){
         viewModelScope.launch {
             val result = repository.search(
                 token = token,
                 page = 1,
-                query = query
+                query = query.value
             )
             recipes.value = result
-            Log.d(TAG, "onCreateView: ${recipes.value[1].title}")
-
         }
     }
 
-    fun onQueryChanged(query: String) {
+    fun onQueryChanged(query: String){
         this.query.value = query
+    }
+
+    fun onSelectedCategoryChanged(category: String){
+        val newCategory = getFoodCategory(category)
+        selectedCategory.value = newCategory
+        onQueryChanged(category)
     }
 }
