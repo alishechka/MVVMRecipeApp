@@ -24,54 +24,63 @@ fun SearchAppBar(
     query: String,
     onQueryChanged: (String) -> Unit,
     onExecuteSearch: () -> Unit,
-    scrollPosition: Float,
+    categories: List<FoodCategory>,
     selectedCategory: FoodCategory?,
     onSelectedCategoryChanged: (String) -> Unit,
-    onChangedCategoryScrollPosition: (Float) -> Unit,
+    scrollPosition: Float,
+    onChangeScrollPosition: (Float) -> Unit,
     onToggleTheme: () -> Unit,
-) {
+){
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colors.surface,
-        elevation = 8.dp
-    ) {
-        Column {
-            Row(modifier = Modifier.fillMaxWidth()) {
+        modifier = Modifier
+            .fillMaxWidth()
+        ,
+        color = MaterialTheme.colors.secondary,
+        elevation = 8.dp,
+    ){
+        Column{
+            Row(modifier = Modifier.fillMaxWidth()){
                 TextField(
                     modifier = Modifier
-                        .fillMaxWidth(0.90f)
-                        .padding(8.dp),
+                        .fillMaxWidth(.9f)
+                        .padding(8.dp)
+                    ,
                     value = query,
-                    onValueChange = { newValue ->
-                        onQueryChanged(newValue)
+                    onValueChange = {
+                        onQueryChanged(it)
                     },
                     label = {
                         Text(text = "Search")
                     },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Search
+                        imeAction = ImeAction.Done,
                     ),
                     leadingIcon = {
                         Icon(Icons.Filled.Search)
                     },
                     onImeActionPerformed = { action, softKeyboardController ->
-                        if (action == ImeAction.Search) {
+                        if (action == ImeAction.Done) {
                             onExecuteSearch()
                             softKeyboardController?.hideSoftwareKeyboard()
                         }
                     },
-                    textStyle = MaterialTheme.typography.button,
+                    textStyle = TextStyle(color = MaterialTheme.colors.onSurface),
                     backgroundColor = MaterialTheme.colors.surface
                 )
-                ConstraintLayout(modifier = Modifier.align(Alignment.CenterVertically)) {
-                    val menu = createRef()
-                    IconButton(onClick = onToggleTheme,
+                ConstraintLayout(
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    val (menu) = createRefs()
+                    IconButton(
                         modifier = Modifier
                             .constrainAs(menu) {
                                 end.linkTo(parent.end)
                                 linkTo(top = parent.top, bottom = parent.bottom)
-                            }) {
+                            },
+                        onClick = onToggleTheme
+                        ,
+                    ){
                         Icon(Icons.Filled.MoreVert)
                     }
                 }
@@ -79,20 +88,25 @@ fun SearchAppBar(
             val scrollState = rememberScrollState()
             ScrollableRow(
                 modifier = Modifier
-                    .padding(start = 8.dp, bottom = 8.dp),
-                scrollState = scrollState
+                    .padding(start = 8.dp, bottom = 8.dp)
+                ,
+                scrollState = scrollState,
             ) {
+
+                // restore scroll position after rotation
                 scrollState.scrollTo(scrollPosition)
 
-                for (category in getAllFoodCategories()) {
+                for(category in categories){
                     FoodCategoryChip(
                         category = category.value,
                         isSelected = selectedCategory == category,
                         onSelectedCategoryChanged = {
+                            onChangeScrollPosition(scrollState.value)
                             onSelectedCategoryChanged(it)
-                            onChangedCategoryScrollPosition(scrollState.value)
                         },
-                        onExecuteSearch = { onExecuteSearch() }
+                        onExecuteSearch = {
+                            onExecuteSearch()
+                        },
                     )
                 }
             }
